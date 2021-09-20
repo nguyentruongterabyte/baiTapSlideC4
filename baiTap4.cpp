@@ -9,6 +9,7 @@
 #include<iostream>
 #include<regex>
 #include<Windows.h>
+#include<cstdio>
 
 
 using namespace std;
@@ -59,6 +60,7 @@ void inputAmount(char* soLuong) {
 	//Số lượng không âm
 	//Nếu chuỗi nhập chứa các ký tự lạ. Nhập lại.
 	do {
+		cin.ignore();
 		cout << "Input the amount of fractions array: ";
 		gets_s(soLuong, 100);
 		if (!regex_match(soLuong, amountExpr)) {
@@ -93,7 +95,7 @@ void inputOneFraction(fraction& myFraction) {//Hàm để nhập tử số và m
 	//2 câu lệnh dưới là chuyển chuỗi thành kiểu số nguyên bằng hàm atoi.
 	myFraction.numerator = atoi(a);
 	myFraction.denominator = atoi(b);
-	myFraction.value = myFraction.numerator / myFraction.denominator;
+	myFraction.value = (float)myFraction.numerator / (float)myFraction.denominator;
 }
 void inputFrations(fraction*& myFractions, int length) {//Hàm nhập một mảng các phân số có độ dài lenght.
 	for (int i = 0; i < length; i++) {
@@ -198,94 +200,131 @@ fraction searchingFirstPositiveFractionInArray (fraction *& myFractions,int leng
 	}
 	return firstPositiveFraction;
 }
-
-void searchMaxAndMinFractions(fraction*& myFractions, int length, fraction& maxFraction, fraction& minFraction) {
-	maxFraction = myFractions[0];
-	minFraction = myFractions[0];
-	float tempMax = myFractions[0].value;
-	float tempMin = myFractions[0].value;
-	for (int i = 1; i < length; i++) {
-		if(myFractions[i].value > tempMax) {
-			maxFraction = myFractions[i];
-			tempMax = myFractions[i].value;
-		}
-		if (myFractions[i].value < tempMin) {
-			minFraction = myFractions[i];
-			tempMin = myFractions[i].value;
-		}
-	}
+void swapFraction(fraction& a, fraction& b)
+{
+	fraction t = a;
+	a = b;
+	b = t;
 }
 
+
+int partition(fraction *& myFractions,int low, int high)
+{
+	float pivot = myFractions[high].value;    // pivot
+	int left = low;
+	int right = high - 1;
+	while (true) {
+		while (left <= right && myFractions[left].value < pivot) left++;
+		while (right >= left && myFractions[right].value > pivot) right--;
+		if (left >= right) break;
+		swap(myFractions[left], myFractions[right]);
+		left++;
+		right--;
+	}
+	swap(myFractions[left], myFractions[high]);
+	return left;
+}
+
+/* Hàm thực hiện giải thuật quick sort */
+void quickSort(fraction *& myFractions, int low, int high)
+{
+	if (low < high)
+	{
+		/* pi là chỉ số nơi phần tử này đã đứng đúng vị trí
+		 và là phần tử chia mảng làm 2 mảng con trái & phải */
+		int pi = partition(myFractions, low, high);
+
+		// Gọi đệ quy sắp xếp 2 mảng con trái và phải
+		quickSort(myFractions, low, pi - 1);
+		quickSort(myFractions, pi + 1, high);
+	}
+}
 int main() {
 	system("color f2");
-	fraction* myFractions, firstPositiveFraction, maxFraction, minFraction;
+	fraction* myFractions, firstPositiveFraction;
 	char length[100];
 	int n, positiveFracs, negativeFracs;
-	float *valuesArray;
-	inputAmount(length);//Nhập số lượng phân số của mảng myFractions. 
-	n = atoi(length);//Dùng hàm atoi để chuyển kiểu char thành kiểu int.
-	myFractions = new fraction[n];//mảng myFraction có độ dài n.
-	valuesArray = new float[n];//Tạo một mảng lưu giá trị thập phân của các phân số;
+	char options;
+	do {
+		cout << "Press 'i' to input new fractions array.\n";
+		cout << "Press 'e' to exit.\n";
+		cin >> options;
+		switch (options) {
+		case 'i':
+			inputAmount(length);//Nhập số lượng phân số của mảng myFractions. 
+			n = atoi(length);//Dùng hàm atoi để chuyển kiểu char thành kiểu int.
+			myFractions = new fraction[n];//mảng myFraction có độ dài n.
 
 
 
-	inputFrations(myFractions, n);//Nhập các phân số trong mảng.
+			inputFrations(myFractions, n);//Nhập các phân số trong mảng.
 
 
-	cout << "\n=====================================\n";
-	cout << "The fractions array has just been entered is: ";
-	outputFractions(myFractions, n);//Xuất mảng vừa nhập từ bàn phím.
+			cout << "\n=====================================\n";
+			cout << "The fractions array has just been entered is: ";
+			outputFractions(myFractions, n);//Xuất mảng vừa nhập từ bàn phím.
 
-	printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
-	setColor(4);
-	cout << "After reducing: ";
-	reducingFractions(myFractions, n);//rút gọn phân số.
-	outputFractions(myFractions, n);//Xuất mảng phân số vừa rút gọn.
-	setColor(2);
+			printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
+			setColor(4);
+			cout << "After reducing: ";
+			reducingFractions(myFractions, n);//rút gọn phân số.
+			outputFractions(myFractions, n);//Xuất mảng phân số vừa rút gọn.
+			setColor(2);
 
-	printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
-	positiveFracs = countingPositiveFractions(myFractions, n);//Khởi tạo số phân số âm trong mảng.
-	negativeFracs = countingNegativeFractions(myFractions, n);//Khởi tạo số phân số dương trong mảng.
-	cout << "The array has ";
-	setColor(4);
-	cout << positiveFracs << " positive ";
-	setColor(2);
-	cout << "fractions.\n";
-	cout << "The array has ";
-	setColor(4);
-	cout << negativeFracs << " negative ";
-	setColor(2);
-	cout << "fractions.\n";
-	cout << "The array has ";
-	setColor(4);
-	cout << n - positiveFracs - negativeFracs << " fractions equal to 0";
-	setColor(2);
+			printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
+			positiveFracs = countingPositiveFractions(myFractions, n);//Khởi tạo số phân số âm trong mảng.
+			negativeFracs = countingNegativeFractions(myFractions, n);//Khởi tạo số phân số dương trong mảng.
+			cout << "The array has ";
+			setColor(4);
+			cout << positiveFracs << " positive ";
+			setColor(2);
+			cout << "fractions.\n";
+			cout << "The array has ";
+			setColor(4);
+			cout << negativeFracs << " negative ";
+			setColor(2);
+			cout << "fractions.\n";
+			cout << "The array has ";
+			setColor(4);
+			cout << n - positiveFracs - negativeFracs << " fractions equal to 0";
+			setColor(2);
 
-	printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
-	firstPositiveFraction = searchingFirstPositiveFractionInArray(myFractions, n);//Khởi tạo phân số dương đầu tiên trong mảng.
-	if (firstPositiveFraction.numerator == 0) {
-		cout << "There is no positive fraction.\n";
-	}
-	else {
-	cout << "The first positive fraction is: ";
-	outputOneFraction(firstPositiveFraction);//Xuất phân số dương đầu tiên.
-	}
+			printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
+			firstPositiveFraction = searchingFirstPositiveFractionInArray(myFractions, n);//Khởi tạo phân số dương đầu tiên trong mảng.
+			if (firstPositiveFraction.numerator == 0) {
+				cout << "There is no positive fraction.\n";
+			}
+			else {
+				cout << "The first positive fraction is: ";
+				outputOneFraction(firstPositiveFraction);//Xuất phân số dương đầu tiên.
+			}
 
-	printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
-	searchMaxAndMinFractions(myFractions, n, maxFraction, minFraction);
-	cout << "The max fraction is: ";
-	outputOneFraction(maxFraction);//Xuất phân số lớn nhất trong mảng.
-	cout << "\nThe min fraction is: ";
-	outputOneFraction(minFraction);//Xuất phân số nhỏ nhất trong mảng.
-
-
-
-
-
-	
+			printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
+			quickSort(myFractions, 0, n - 1);
+			//Sử dụng quickSort để sắp xếp tăng những phần tử trong mảng phân số.
+			//Khi đó phần tử đầu tiên sẽ là phần tử nhỏ nhất trong mảng (myFractions[o]).
+			//Phần tử cuối cùng sẽ là phần tử lớn nhất.
+			cout << "The max fraction is: ";
+			outputOneFraction(myFractions[n - 1]);//Xuất phân số lớn nhất trong mảng.
+			cout << "\nThe min fraction is: ";
+			outputOneFraction(myFractions[0]);//Xuất phân số nhỏ nhất trong mảng.
 
 
+
+			printf("\n%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n", 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6, 3, 4, 5, 6);
+			cout << "Increasing array: ";
+			//sau khi dùng quickSort thì mảng đã sắp xếp theo thứ tự tăng dần nên ta chỉ việc xuất mảng
+			outputFractions(myFractions, n);
+			cout << "\nDecreasing array: ";
+			//Vì đã được sắp xếp tăng dần nên chỉ việc xuất mảng số ngược lại ta có mảng giảm dần.
+			for (int i = n - 1; i >= 0; i--) {
+				outputOneFraction(myFractions[i]);
+				cout << " ";
+			}
+			cout << endl;
+			break;
+		}
+	} while (options != 'e');
 	printf("\n");
 	system("pause");
-	
 }

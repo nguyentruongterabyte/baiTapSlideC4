@@ -5,11 +5,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <io.h>
+#include <iomanip>
+#include <Windows.h>
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 
 using namespace std;
-
 
 typedef struct {
 	int day;
@@ -38,37 +39,46 @@ void inputAmountOfStudents(char amount[40]) {
 }
 void devidingBirthDay(student& sinhVien, char* birthDay) {
 	char* p = NULL, * pNext = NULL;
-	p = strtok_s(birthDay, "/", &pNext);
-	sinhVien.birthDay.day = atoi(p);
-	p = strtok_s(NULL, "/", &pNext);
-	sinhVien.birthDay.month = atoi(p);
-	p = strtok_s(NULL, "/", &pNext);
-	sinhVien.birthDay.year = atoi(p);
+	p = strtok_s(birthDay, "/", &pNext);//Tách ngày từ chuỗi dd/mm/yyyy
+	sinhVien.birthDay.day = atoi(p);//chuyển chuỗi đã tách sang dạng số nguyên rồi gán cho thuộc tính ngày
+	p = strtok_s(NULL, "/", &pNext);//Tiếp tục tách chuỗi cũ mm/yyyy để lấy tháng (mm)
+	sinhVien.birthDay.month = atoi(p);//tương tự như bước trên
+	p = strtok_s(NULL, "/", &pNext);//Tách thêm một lần nữa để lấy năm
+	sinhVien.birthDay.year = atoi(p);//
 }
-
-void inputOneStudent(vector<student> &studentsList) {
+void toUpper(char* s) {//chuyển in hoa cả 1 chuỗi
+	int i = 0;
+	while (s[i] != '\0') {
+		if (s[i] >= 'a' && s[i] <= 'z') {
+			s[i] -= 32;
+		}
+		i++;
+	}
+}
+void inputOneStudent(vector<student> &studentsList) {//Nhập 1 sinh viên
 	student sinhVien;
 	int i;
 	char birthDay[20] = "", score[20] = "0", * p, * pEnd;
-	regex studentIDExpr("[N|B|n|b]\\d{2}(DC|dc)(CN|cn|AT|at|VT|vt|KT|kt|MR|mr|PT|pt|DT|dt)[0-9]{3}");
-	regex nameExpr("[a-zA-Z ]+");
-	regex genderExpr("[n|N][a|A][m|M]|[n|N][u|U]|khac|Khac");//nam, Nam, nAm, naM, nAM,.. miễn là từ nam, nữ tương tự
+	regex studentIDExpr("[N|B]\\d{2}(DC)(CN|AT|VT|KT|MR|PT|DT)[0-9]{3}");
+	regex nameExpr("[A-Z ]+");//Không nhận ký tự đặc biệt
+	regex genderExpr("(NAM)|(NU)|(KHAC)");//  NAM, NU 
 	regex birthDayExpr("(0[^0]|[^0]|[1|2]?[0-9]|3[0|1])/(0[^0]|[^0]|1[0-2])/(19[0-9]{2}|20[0-9]{2})");
 	//d(d)/m(m)/yyyy hoặc 
-	regex gradeExpr("[D|d]\\d{2}(CQ|cq)(CN|AT|VT|KT|MR|PT|DT|cn|at|vt|kt|mr|pt|dt)[0-9]{2}-[n|N|b|B]");
+	regex gradeExpr("D\\d{2}(CQ)(CN|AT|VT|KT|MR|PT|DT)[0-9]{2}-[N|B]");//D20CQCN02-N
 	regex scoreExpr("[0-9]\\.?[0-9]{0,3}|10");//Điểm nằm trong đoạn 0 đến 10.
-	//d20cqcn01-n d19cqat01-n
 	do {
 		cout << "Nhap ma so sinh vien: ";
 		gets_s(sinhVien.studentID);
-
+		toUpper(sinhVien.studentID);
 		if (!regex_match(sinhVien.studentID, studentIDExpr)) {
 			cout << "Ma sinh vien khong hop le. Mau: n20dccn083 N20DCVT078.\n";
 		}
 	} while (!regex_match(sinhVien.studentID, studentIDExpr));
+	
 	do {
 		cout << "Nhap ho ten sinh vien: ";
 		gets_s(sinhVien.fullName);
+		toUpper(sinhVien.fullName);
 		if (!regex_match(sinhVien.fullName, nameExpr)) {
 			cout << "Ten khong hop le.\n";
 		}
@@ -76,7 +86,7 @@ void inputOneStudent(vector<student> &studentsList) {
 	do {
 		cout << "Nhap gioi tinh: ";
 		gets_s(sinhVien.gender);
-		//strupr(sinhVien.gender);
+		toUpper(sinhVien.gender);
 		if (!regex_match(sinhVien.gender, genderExpr)) {
 			cout << "Gioi tinh khong hop le.\n";
 		}
@@ -92,6 +102,7 @@ void inputOneStudent(vector<student> &studentsList) {
 	do {
 		cout << "Nhap lop: ";
 		gets_s(sinhVien.grade);
+		toUpper(sinhVien.grade);
 		if (!regex_match(sinhVien.grade, gradeExpr)) {
 			cout << "Lop nhap khong hop le. vd: d20cqcn01-n, D20CQAT01-B.\n";
 		}
@@ -107,61 +118,230 @@ void inputOneStudent(vector<student> &studentsList) {
 	studentsList.push_back(sinhVien);
 	cout << endl;
 }
-void inputList(vector<student> &studentsList, int n) {
+void inputList(vector<student> &studentsList, int n) {//Nhập sinh viên với số lượng cho trước
 	for (int i = 0; i < n; i++) {
 		cout << "\nSinh vien " << i + 1 << " :\n";
 		inputOneStudent(studentsList);
 	}
 }
-void outputOneStudent(student sinhVien) {
-	cout << "\nMa so sinh vien: " << sinhVien.studentID << endl;
+void outputOneStudent(student sinhVien) {//xuất thông tin 1 sinh vien
+	/*cout << "\nMa so sinh vien: " << sinhVien.studentID << endl;
 	cout << "Ho va ten: " << sinhVien.fullName << endl;
 	cout << "Gioi tinh: " << sinhVien.gender << endl;
 	cout << "Ngay sinh: " << sinhVien.birthDay.day << "/" << sinhVien.birthDay.month << "/" << sinhVien.birthDay.year << endl;
 	cout << "Lop: " << sinhVien.grade << endl;
-	cout << "Diem trung binh: " << sinhVien.AverageScore << endl;
+	cout << "Diem trung binh: " << sinhVien.AverageScore << endl;*/
+	cout << sinhVien.studentID << setw(22)
+		<< sinhVien.fullName << "            "
+		<< sinhVien.gender << "      "
+		<< sinhVien.birthDay.day << "/" << sinhVien.birthDay.month << "/" << sinhVien.birthDay.year << "  "
+		<< sinhVien.grade << "   "
+		<< sinhVien.AverageScore << endl;
 }
-void outputList(vector<student> studentsList) {
+void outputList(vector<student> studentsList) {//xuất danh sách
+		cout << "\nDanh sach sinh vien:\n";
+		cout << "   MSSV         Ho Va Ten                Gioi Tinh  Ngay Sinh       Lop      Diem\n";
 	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
-		cout << "\nThong tin sinh vien:\n";
 		outputOneStudent(*i);
-		cout << "==========================\n";
 	}
 }
 void searchAndPrintStudentsHavingScoreGreaterThan5(vector<student> studentsList) {
+	//tìm và in số sinh viên có điểm trung bình > 5
 	cout << "\nNhung sinh vien co diem lon hon 5 la:\n";
 	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
 		if ((*i).AverageScore > 5) {
-			cout << (*i).fullName << endl;
+			outputOneStudent(*i);
 		}
 	}
 }
-void searchAndPrintITStudents(vector<student> studentsList) {
+void searchAndPrintITStudents(vector<student> studentsList) {//tìm và in số sinh viên học ngành công nghệ thông tin
 	cout << "Nhung sinh vien hoc nganh cong nghe thong tin la:\n";
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if(strstr((*i).grade, "CN") != NULL) {//tìm xem trong mã lớp có chữ "CN" hay không bằng hàm strstr
+			outputOneStudent(*i);
+			printf("\n");
+		}
+	}
+}
+int countingFemaleStudents(vector<student> studentsList) {
+	int count = 0;
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if (strcmp((*i).gender, "NU") == 0) {//Nữ trong danh sách
+			count++;
+		}
+	}
+	return count;
+}
+
+void searchAndPrintBestStudents(vector<student> studentsList) {
+	float maxScore = studentsList[0].AverageScore;
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if ((*i).AverageScore > maxScore) {
+			maxScore = (*i).AverageScore;
+		}
+	}
+	cout << "Nhung ban co diem trung binh cao nhat la:\n";
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if ((*i).AverageScore == maxScore) {
+			outputOneStudent(*i);
+			cout << endl;
+		}
+	}
+}
+
+void searchStudentByID(vector<student> studentsList, char *ID) {
+	bool check = 0;
+	
+	regex studentIDExpr("[N|B]\\d{2}(DC)(CN|AT|VT|KT|MR|PT|DT)[0-9]{3}");
+	cin.ignore();
+	do {
+		cout << "Nhap ma sinh vien cua sinh vien ban muon tim: ";
+		gets_s(ID, 40);
+		toUpper(ID);
+		if (!regex_match(ID, studentIDExpr)) {
+			cout << "Ma tim kiem khong hop le.\n";
+		}
+	} while (!regex_match(ID, studentIDExpr));
+	cout << "Ket qua:\n";
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if (strcmp((*i).studentID, ID) == 0) {//sử dụng hàm strcmp để so sánh
+			outputOneStudent(*i);
+			check = 1;
+		}
+	}
+	if (check == 0) {
+		cout << "Khong tim thay ket qua. Khong co sinh vien nay trong danh sach\n";
+	}
 }
 //điểm trung bình lớn hơn 5
 //student* searchITStudents();//sinh viên ngành công nghệ thông tin
 //int countingFemaleStudent();//Đếm sinh viên nữ
 //student* studentsHaveGreatestScore();//sinh viên có điểm trung bình cao nhất
+void deleteOneStudent(vector<student> studentsList, char ID[]) {
+	//hàm này thực hiện xóa một sinh viên khỏi danh sách
+	toUpper(ID);
+	for (auto i = studentsList.begin(); i < studentsList.end(); ++i) {
+		if (strcmp((*i).studentID, ID) == 0) {//so sánh bằng lệnh strcmp
+			studentsList.erase(i);//xóa sinh viên ra khỏi danh sách
+		}
+	}
+}
 
+void swap(student &a, student &b)
+{//Đổi chỗ học sinh viên
+	student t = a;
+	a = b;
+	b = t;
+}
 
+int partition(vector<student> studentsList, int low, int high)
+{
+	float pivot = studentsList[high].AverageScore;    // pivot
+	int left = low;
+	int right = high - 1;
+	while (true) {
+		while (left <= right && studentsList[left].AverageScore < pivot) left++;
+		while (right >= left && studentsList[right].AverageScore > pivot) right--;
+		if (left >= right) break;
+		swap(studentsList[left], studentsList[right]);
+		left++;
+		right--;
+	}
+	swap(studentsList[left], studentsList[high]);
+	return left;
+}
+
+/* Hàm thực hiện giải thuật quick sort */
+void quickSort(vector<student> studentsList,int low, int high)
+{
+	if (low < high)
+	{
+		/* pi là chỉ số nơi phần tử này đã đứng đúng vị trí
+		 và là phần tử chia mảng làm 2 mảng con trái & phải */
+		int pi = partition(studentsList, low, high);
+
+		// Gọi đệ quy sắp xếp 2 mảng con trái và phải
+		quickSort(studentsList, low, pi - 1);
+		quickSort(studentsList, pi + 1, high);
+	}
+}
 int main() {
 
-	char amount[40];
+	char amount[40], ID[40] = "\0";
 	vector<student> studentsList;
-	int n;
-	char option[10];
-
-	cout << "1. Nhap mot sinh vien.\n";
-	cout << "2. Nhap nhieu sinh vien.\n";
-	cout << "3. Xuat danh sach sinh vien.\n";
-	cout << "4. Xuat danh sach nhung sinh vien co diem lon hon 5.\n";
-	cout << "5. Xuat danh sach sinh vien hoc nganh cong nghe thong tin.\n";
-	cout << "6. Dem so luong sinh vien nu.\n";
-	cout << "7. Xuat sinh vien co diem trung binh cao nhat.\n";
-	cout << "8. Them mot sinh vien vao cuoi danh sach.\n";
-	cout << "9. Tim sinh vien theo ma so. Xoa sinh vien do.\n";
-	cout << "10. Sap xep theo diem trung binh tang dan.\n";
+	int n, high = 0;
+	int option;
+	do {
+		cout << "\n===========================================================\n";
+		cout << "1. Nhap mot sinh vien.\n";
+		cout << "2. Nhap nhieu sinh vien.\n";
+		cout << "3. Xuat danh sach sinh vien.\n";
+		cout << "4. Xuat danh sach nhung sinh vien co diem lon hon 5.\n";
+		cout << "5. Xuat danh sach sinh vien hoc nganh cong nghe thong tin.\n";
+		cout << "6. Dem so luong sinh vien nu.\n";
+		cout << "7. Xuat sinh vien co diem trung binh cao nhat.\n";
+		cout << "8. Them mot sinh vien vao cuoi danh sach.\n";
+		cout << "9. Tim sinh vien theo ma so. Xoa sinh vien do.\n";
+		cout << "10. Sap xep theo diem trung binh tang dan.\n";
+		cout << "11. Thoat.\n";
+		cout << "NHAP MOT LUA CHON: ";
+		cin >> option;
+		cout << "\n===========================================================\n";
+		switch (option) {
+		default:
+			break;
+		case 1:
+			cin.ignore();
+			cout << "Nhap thong tin sinh vien:\n";
+			inputOneStudent(studentsList);
+			high++;
+			break;
+		case 2:
+			cin.ignore();
+			inputAmountOfStudents(amount);
+			n = atoi(amount);
+			inputList(studentsList, n);
+			break;
+			high += n;
+		case 3:
+			outputList(studentsList);
+			break;
+		case 4:
+			searchAndPrintStudentsHavingScoreGreaterThan5(studentsList);
+			break;
+		case 5:
+			searchAndPrintITStudents(studentsList);
+			break;
+		case 6:
+			n = countingFemaleStudents(studentsList);
+			if (n == 0) cout << "Danh sach khong co sinh vien nu nao ca.\n";
+			else cout << "Co " << n << " sinh vien nu trong danh sach.\n";
+			break;
+		case 7:
+			searchAndPrintBestStudents(studentsList);
+			break;
+		case 8:
+			cin.ignore();
+			inputOneStudent(studentsList);
+			high++;
+			break;
+		case 9:
+			searchStudentByID(studentsList, ID);
+			cout << "Ban co muon xoa sinh vien nay ra khoi danh sach\n"
+				<< "1. Co\n"
+				<< "2. Khong\n";
+			cin >> n;
+			if (n == 1) {//có thì n = 1
+					deleteOneStudent(studentsList, ID);
+					high--;
+			}
+			break;
+		case 10:
+			cout << "Sau khi sap xep theo thu tu tang dan cua diem trung binh danh sach la:\n";
+			quickSort(studentsList, 0, high - 1);
+			outputList(studentsList);
+		}
+	} while (option != 11);
 }
 //typedef struct date {
 //	int day;
